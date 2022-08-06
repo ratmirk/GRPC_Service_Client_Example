@@ -1,10 +1,12 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using WeatherSimulator.Proto;
 using WeatherSimulator.Server.Configurations;
 using WeatherSimulator.Server.Models;
 using WeatherSimulator.Server.Services.Abstractions;
@@ -18,9 +20,10 @@ public class MeasureService : IMeasureService
     private readonly IMeasureSubscriptionStore subscriptionStore;
     private readonly WeatherServerConfiguration _weatherServerConfiguration;
     private readonly Dictionary<Guid, Sensor> sensors;
+    private readonly ConcurrentDictionary<Guid, SensorMeasure> lastMeasures = new();
 
-    public MeasureService( 
-        IMeasureSubscriptionStore subscriptionStore, 
+    public MeasureService(
+        IMeasureSubscriptionStore subscriptionStore,
         IOptions<WeatherServerConfiguration> weatherServerOptions,
         ILogger<MeasureService> logger)
     {
@@ -52,6 +55,8 @@ public class MeasureService : IMeasureService
         {
             throw new ArgumentException(nameof(measure.SensorId));
         }
+
+        lastMeasures.AddOrUpdate(measure.SensorId, measure, (guid, sensorMeasure) => measure);
 
         foreach (SensorMeasureSubscription subscription in subscriptionStore.GetSubscriptions(measure.SensorId))
         {
@@ -86,5 +91,12 @@ public class MeasureService : IMeasureService
     public IReadOnlyCollection<Sensor> GetAvailableSensors()
     {
         return sensors.Values;
+    }
+
+    public SensorMeasure? GetLastMeasure(Guid sensorId)
+    {
+        lastMeasures.TryGetValue(sensorId, out var measure);
+
+        return measure ?? null;
     }
 }

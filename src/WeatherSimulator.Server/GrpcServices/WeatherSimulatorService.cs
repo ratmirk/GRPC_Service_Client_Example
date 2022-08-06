@@ -29,8 +29,23 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
 
     public override async Task GetSensorsStream(IAsyncStreamReader<ToServerMessage> requestStream, IServerStreamWriter<SensorData> responseStream, ServerCallContext context)
     {
-
         await ProceedMessage(requestStream, responseStream, context.CancellationToken);
+    }
+
+    public override Task<SensorData> GetSensorData(SensorInfo sensorInfo, ServerCallContext context)
+    {
+        if (!Guid.TryParse(sensorInfo.SensorId, out var sensorId))
+            throw new ArgumentException("Некорректный SensorId");
+
+        var sensorMeasure = _measureService.GetLastMeasure(sensorId);
+
+        return Task.FromResult(new SensorData
+        {
+            SensorId = sensorMeasure?.SensorId.ToString(),
+            Co2 = sensorMeasure?.CO2 ?? default,
+            Humidity = sensorMeasure?.Humidity ?? default,
+            Temperature = sensorMeasure?.Temperature ?? default,
+        });
     }
 
     private async Task ProceedMessage(IAsyncStreamReader<ToServerMessage> requestStream,
@@ -41,11 +56,11 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         while (await requestStream.MoveNext() && !cancellationToken.IsCancellationRequested)
         {
             var current = requestStream.Current;
-            if(current.SubscribeSensorsIds is not null) 
+            if(current.SubscribeSensorsIds is not null)
                 Subscribe(responseStream, sensorSubscriptionIds, cancellationToken, current);
 
 
-            if(current.UnsubscribeSensorsIds is not null) 
+            if(current.UnsubscribeSensorsIds is not null)
                 Unsubscribe(sensorSubscriptionIds, current);
         }
     }
@@ -73,10 +88,10 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         foreach (var id in current.UnsubscribeSensorsIds)
         {
             if (!Guid.TryParse(id, out var tempId) ||
-                !sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId)) 
+                !sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId))
                 continue;
-            
-            
+
+
             _measureService.UnsubscribeFromMeasures(tempId, subscriptionId);
             sensorSubscriptionIds.Remove(tempId, out _);
             _logger.LogDebug("Unsubscribed!");

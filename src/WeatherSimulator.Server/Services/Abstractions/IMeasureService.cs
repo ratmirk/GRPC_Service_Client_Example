@@ -15,4 +15,6 @@ public interface IMeasureService
     void UnsubscribeFromMeasures(Guid sensorId, Guid subscriptionId);
 
     IReadOnlyCollection<Sensor> GetAvailableSensors();
+
+    SensorMeasure? GetLastMeasure(Guid sensorId);
 }
