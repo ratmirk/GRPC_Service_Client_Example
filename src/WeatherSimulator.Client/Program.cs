@@ -15,6 +15,9 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<ClientOptions>(builder.Configuration.GetSection("ClientOptions"));
 
+// HostedServices.
+builder.Services.AddHostedService<WeatherClientService>();
+
 // Grpc.
 builder.Services.AddGrpc();
 builder.Services.AddGrpcClient<WeatherSimulatorService.WeatherSimulatorServiceClient>((sp, x) =>

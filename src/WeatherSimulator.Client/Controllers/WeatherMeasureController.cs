@@ -26,6 +26,6 @@ public class WeatherMeasureController : ControllerBase
     {
         ClientStorage.SensorsData.TryGetValue(id, out var history);
 
-        return Task.FromResult(history ?? new List<SensorData>());
+        return Task.FromResult(history?.ToList() ?? new List<SensorData>());
     }
 }

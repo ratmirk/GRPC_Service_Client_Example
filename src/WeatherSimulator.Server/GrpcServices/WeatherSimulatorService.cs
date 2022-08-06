@@ -39,12 +39,18 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
 
         var sensorMeasure = _measureService.GetLastMeasure(sensorId);
 
+        if (sensorMeasure == null)
+        {
+            return Task.FromResult(new SensorData());
+        }
+
         return Task.FromResult(new SensorData
         {
-            SensorId = sensorMeasure?.SensorId.ToString(),
-            Co2 = sensorMeasure?.CO2 ?? default,
-            Humidity = sensorMeasure?.Humidity ?? default,
-            Temperature = sensorMeasure?.Temperature ?? default,
+            SensorId = sensorMeasure.SensorId.ToString(),
+            Co2 = sensorMeasure.CO2 ,
+            Humidity = sensorMeasure.Humidity,
+            Temperature = sensorMeasure.Temperature,
+            LocationType = (SensorLocationType)sensorMeasure.LocationType
         });
     }
 
