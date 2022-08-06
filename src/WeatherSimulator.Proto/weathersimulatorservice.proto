@@ -5,6 +5,7 @@ package WeatherSimulator.Proto;
 
 service WeatherSimulatorService {
   rpc GetSensorsStream (stream ToServerMessage) returns (stream SensorData);
+  rpc GetSensorData (SensorInfo) returns (SensorData);
 }
 
 message ToServerMessage{
