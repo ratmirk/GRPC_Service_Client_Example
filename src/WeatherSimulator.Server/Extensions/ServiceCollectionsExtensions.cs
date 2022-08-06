@@ -11,13 +11,14 @@ namespace WeatherSimulator.Server.Extensions;
 
 public static class ServiceCollectionsExtensions
 {
-    public static IServiceCollection AddSensorsHostedServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddSensorsHostedServices(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.Configure<WeatherServerConfiguration>(configuration.GetSection(nameof(WeatherServerConfiguration)));
         services.AddHostedService<SensorPoolingService>();
         services.AddSingleton<IMeasureSubscriptionStore, MeasureSubscriptionStore>();
         services.AddSingleton<IMeasureService, MeasureService>();
-        
+
         return services;
     }
 }

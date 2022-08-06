@@ -31,12 +31,12 @@ public class SensorPoolingService : IHostedService, IDisposable
 
         _logger.LogInformation("Старт сервиса, опрашивающего {sensorsCount} сенсоров.", registeredSensors.Length);
 
-        for(var i = 0; i < registeredSensors.Length; i++)
+        for (var i = 0; i < registeredSensors.Length; i++)
         {
             var sensorItem = registeredSensors[i];
-            _timers.Add(new Timer(PoolSensor, 
-                sensorItem, 
-                TimeSpan.Zero, 
+            _timers.Add(new Timer(PoolSensor,
+                sensorItem,
+                TimeSpan.Zero,
                 TimeSpan.FromMilliseconds(sensorItem.PollingFrequency)));
         }
 
@@ -47,14 +47,14 @@ public class SensorPoolingService : IHostedService, IDisposable
     {
         var sensorInfo = state as Sensor;
         var randGen = new Random();
-        
+
         if (sensorInfo == null)
             return;
 
-        var measureInfo = new SensorMeasure(sensorInfo.Id, 
-            temperature: randGen.Next(200, 320) / 10,
-            humidity: randGen.Next(40, 60),
-            co2: sensorInfo.LocationType == SensorLocationType.External ? randGen.Next(350, 360) : randGen.Next(400, 600));
+        var measureInfo = new SensorMeasure(sensorInfo.Id,
+            randGen.Next(200, 320) / 10,
+            randGen.Next(40, 60),
+            sensorInfo.LocationType == SensorLocationType.External ? randGen.Next(350, 360) : randGen.Next(400, 600));
 
         _measureService.OnNewMeasure(measureInfo);
     }
@@ -63,19 +63,13 @@ public class SensorPoolingService : IHostedService, IDisposable
     {
         _logger.LogInformation("Timed Hosted Service is stopping.");
 
-        foreach(var timer in _timers)
-        {
-            timer?.Change(Timeout.Infinite, 0);
-        }  
+        foreach (var timer in _timers) timer?.Change(Timeout.Infinite, 0);
 
         return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        foreach(var timer in _timers)
-        {
-            timer?.Dispose();
-        }
+        foreach (var timer in _timers) timer?.Dispose();
     }
 }

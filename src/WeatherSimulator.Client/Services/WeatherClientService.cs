@@ -1,6 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using Google.Protobuf;
-using Google.Protobuf.WellKnownTypes;
 using Grpc.Core;
 using Microsoft.Extensions.Options;
 using WeatherSimulator.Client.Configuration;
@@ -16,7 +14,8 @@ public class WeatherClientService : BackgroundService
     private readonly IOptionsMonitor<ClientOptions> _configuration;
     private ConcurrentBag<Guid> _subscriptions;
 
-    public WeatherClientService(WeatherSimulatorService.WeatherSimulatorServiceClient weatherClient, IOptionsMonitor<ClientOptions> configuration, ILogger<WeatherClientService> logger)
+    public WeatherClientService(WeatherSimulatorService.WeatherSimulatorServiceClient weatherClient,
+        IOptionsMonitor<ClientOptions> configuration, ILogger<WeatherClientService> logger)
     {
         _weatherClient = weatherClient;
         _configuration = configuration;
@@ -29,12 +28,13 @@ public class WeatherClientService : BackgroundService
         var stream = _weatherClient.GetSensorsStream(cancellationToken: stoppingToken);
 
         var responseTask = ReadResponse(stoppingToken, stream);
-        var requestTask =  RequestTask(stoppingToken, stream);
+        var requestTask = RequestTask(stoppingToken, stream);
 
         await Task.WhenAny(requestTask, responseTask);
     }
 
-    private async Task RequestTask(CancellationToken stoppingToken, AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
+    private async Task RequestTask(CancellationToken stoppingToken,
+        AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -56,15 +56,13 @@ public class WeatherClientService : BackgroundService
         }
     }
 
-    private async Task ReadResponse(CancellationToken stoppingToken, AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
+    private async Task ReadResponse(CancellationToken stoppingToken,
+        AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
     {
-
-        await foreach (var sensorData in stream.ResponseStream.ReadAllAsync(cancellationToken: stoppingToken))
+        await foreach (var sensorData in stream.ResponseStream.ReadAllAsync(stoppingToken))
         {
             if (!ClientStorage.SensorsData.ContainsKey(sensorData.SensorId))
-            {
-                ClientStorage.SensorsData.TryAdd(key: sensorData.SensorId, value: new ConcurrentBag<SensorData>());
-            }
+                ClientStorage.SensorsData.TryAdd(sensorData.SensorId, new ConcurrentBag<SensorData>());
 
             ClientStorage.SensorsData[sensorData.SensorId].Add(sensorData);
         }
@@ -83,9 +81,6 @@ public class WeatherClientService : BackgroundService
     private void UpdateSubscriptions()
     {
         _subscriptions.Clear();
-        foreach (var sensor in _configuration.CurrentValue.Sensors)
-        {
-            _subscriptions.Add(sensor);
-        }
+        foreach (var sensor in _configuration.CurrentValue.Sensors) _subscriptions.Add(sensor);
     }
 }

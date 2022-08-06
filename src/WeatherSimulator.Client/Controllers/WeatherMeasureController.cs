@@ -18,7 +18,9 @@ public class WeatherMeasureController : ControllerBase
     [HttpGet]
     [Route("sensor-data")]
     public async Task<SensorData> GetSensorData(string id)
-        => await _weatherClient.GetSensorDataAsync(new SensorInfo {SensorId = id});
+    {
+        return await _weatherClient.GetSensorDataAsync(new SensorInfo {SensorId = id});
+    }
 
     [HttpGet]
     [Route("history")]

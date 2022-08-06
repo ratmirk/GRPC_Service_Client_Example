@@ -6,8 +6,8 @@ namespace WeatherSimulator.Server.Models;
 public class SensorMeasure
 {
     public SensorMeasure(Guid sensorId,
-        double temperature, 
-        int humidity, 
+        double temperature,
+        int humidity,
         int co2)
     {
         SensorId = sensorId;
@@ -31,7 +31,7 @@ public class SensorMeasure
     /// Влажность
     /// </summary>
     public int Humidity { get; private set; }
-    
+
     /// <summary>
     /// Показатель CO2
     /// </summary>

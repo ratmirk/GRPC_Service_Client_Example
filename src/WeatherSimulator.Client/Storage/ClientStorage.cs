@@ -5,5 +5,5 @@ namespace WeatherSimulator.Client.Storage;
 
 public static class ClientStorage
 {
-    public static readonly ConcurrentDictionary<string, ConcurrentBag<SensorData>> SensorsData = new ();
+    public static readonly ConcurrentDictionary<string, ConcurrentBag<SensorData>> SensorsData = new();
 }

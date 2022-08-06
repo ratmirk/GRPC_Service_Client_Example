@@ -7,14 +7,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Google.Protobuf" Version="3.21.4" />
-        <PackageReference Include="Grpc" Version="2.46.3" />
-        <PackageReference Include="Grpc.AspNetCore" Version="2.47.0" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3" />
+        <PackageReference Include="Google.Protobuf" Version="3.21.4"/>
+        <PackageReference Include="Grpc" Version="2.46.3"/>
+        <PackageReference Include="Grpc.AspNetCore" Version="2.47.0"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.3"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\WeatherSimulator.Server\WeatherSimulator.Server.csproj" />
+        <ProjectReference Include="..\WeatherSimulator.Server\WeatherSimulator.Server.csproj"/>
     </ItemGroup>
 
 </Project>

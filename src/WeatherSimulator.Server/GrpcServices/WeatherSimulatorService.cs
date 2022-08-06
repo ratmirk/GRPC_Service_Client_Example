@@ -27,7 +27,8 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         _logger = logger;
     }
 
-    public override async Task GetSensorsStream(IAsyncStreamReader<ToServerMessage> requestStream, IServerStreamWriter<SensorData> responseStream, ServerCallContext context)
+    public override async Task GetSensorsStream(IAsyncStreamReader<ToServerMessage> requestStream,
+        IServerStreamWriter<SensorData> responseStream, ServerCallContext context)
     {
         await ProceedMessage(requestStream, responseStream, context.CancellationToken);
     }
@@ -39,18 +40,15 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
 
         var sensorMeasure = _measureService.GetLastMeasure(sensorId);
 
-        if (sensorMeasure == null)
-        {
-            return Task.FromResult(new SensorData());
-        }
+        if (sensorMeasure == null) return Task.FromResult(new SensorData());
 
         return Task.FromResult(new SensorData
         {
             SensorId = sensorMeasure.SensorId.ToString(),
-            Co2 = sensorMeasure.CO2 ,
+            Co2 = sensorMeasure.CO2,
             Humidity = sensorMeasure.Humidity,
             Temperature = sensorMeasure.Temperature,
-            LocationType = (SensorLocationType)sensorMeasure.LocationType
+            LocationType = (SensorLocationType) sensorMeasure.LocationType
         });
     }
 
@@ -62,31 +60,31 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         while (await requestStream.MoveNext() && !cancellationToken.IsCancellationRequested)
         {
             var current = requestStream.Current;
-            if(current.SubscribeSensorsIds is not null)
+            if (current.SubscribeSensorsIds is not null)
                 Subscribe(responseStream, sensorSubscriptionIds, cancellationToken, current);
 
 
-            if(current.UnsubscribeSensorsIds is not null)
+            if (current.UnsubscribeSensorsIds is not null)
                 Unsubscribe(sensorSubscriptionIds, current);
         }
     }
 
-    private void Subscribe(IServerStreamWriter<SensorData> responseStream, ConcurrentDictionary<Guid, Guid> sensorSubscriptionIds,
+    private void Subscribe(IServerStreamWriter<SensorData> responseStream,
+        ConcurrentDictionary<Guid, Guid> sensorSubscriptionIds,
         CancellationToken cancellationToken, ToServerMessage current)
     {
         foreach (var id in current.SubscribeSensorsIds)
-        {
-            if (Guid.TryParse(id, out var tempId) && !sensorSubscriptionIds.TryGetValue(tempId, out Guid _))
+            if (Guid.TryParse(id, out var tempId) && !sensorSubscriptionIds.TryGetValue(tempId, out var _))
             {
-                var containsSub = sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId);
+                var containsSub = sensorSubscriptionIds.TryGetValue(tempId, out var subscriptionId);
                 if (!containsSub)
                 {
                     sensorSubscriptionIds[tempId] = _measureService.SubscribeToMeasures(tempId,
-                        async measure => await OnNewMeasure(responseStream, measure, cancellationToken), cancellationToken);
+                        async measure => await OnNewMeasure(responseStream, measure, cancellationToken),
+                        cancellationToken);
                     _logger.LogDebug("Subscribed!");
                 }
             }
-        }
     }
 
     private void Unsubscribe(ConcurrentDictionary<Guid, Guid> sensorSubscriptionIds, ToServerMessage current)
@@ -94,7 +92,7 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         foreach (var id in current.UnsubscribeSensorsIds)
         {
             if (!Guid.TryParse(id, out var tempId) ||
-                !sensorSubscriptionIds.TryGetValue(tempId, out Guid subscriptionId))
+                !sensorSubscriptionIds.TryGetValue(tempId, out var subscriptionId))
                 continue;
 
 
@@ -104,7 +102,8 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         }
     }
 
-    private static async Task OnNewMeasure(IAsyncStreamWriter<SensorData> responseStream, SensorMeasure measure, CancellationToken cancellationToken)
+    private static async Task OnNewMeasure(IAsyncStreamWriter<SensorData> responseStream, SensorMeasure measure,
+        CancellationToken cancellationToken)
     {
         await responseStream.WriteAsync(new SensorData()
         {
@@ -112,7 +111,7 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
             Temperature = measure.Temperature,
             Humidity = measure.Humidity,
             Co2 = measure.CO2,
-            LocationType = (Proto.SensorLocationType)measure.LocationType
+            LocationType = (SensorLocationType) measure.LocationType
         }, cancellationToken);
     }
 }

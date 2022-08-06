@@ -23,9 +23,7 @@ public class Startup
         services.AddLogging();
         services.AddGrpc();
         services.AddGrpcReflection();
-        services.AddSwaggerGen(opt => {
-            
-        });
+        services.AddSwaggerGen(opt => { });
 
         services.AddControllers();
     }
@@ -36,7 +34,8 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
-            app.UseSwaggerUI(opt => {
+            app.UseSwaggerUI(opt =>
+            {
                 opt.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
                 opt.RoutePrefix = string.Empty;
             });

@@ -34,31 +34,29 @@ public class MeasureService : IMeasureService
             throw new Exception("Ни один сенсор не был сконфигурирован. Добавьте конфигурацию для сенсоров");
         if (_weatherServerConfiguration.Sensors.Length < 2)
             throw new Exception("Было сконфигурировано слишком мало сенсоров. Минимум 2");
-        var internalSensors = _weatherServerConfiguration.Sensors.Where(it => it.LocationType == Models.Enums.SensorLocationType.Internal).ToArray();
-        var externalSensors = _weatherServerConfiguration.Sensors.Where(it => it.LocationType == Models.Enums.SensorLocationType.External).ToArray();
+        var internalSensors = _weatherServerConfiguration.Sensors
+            .Where(it => it.LocationType == Models.Enums.SensorLocationType.Internal).ToArray();
+        var externalSensors = _weatherServerConfiguration.Sensors
+            .Where(it => it.LocationType == Models.Enums.SensorLocationType.External).ToArray();
         if (internalSensors.Length < 1)
             throw new Exception("Было сконфигурировано слишком мало внутренних сенсоров. Минимум 1");
         if (externalSensors.Length < 1)
             throw new Exception("Было сконфигурировано слишком мало внешних сенсоров. Минимум 1");
 
-        sensors = new();
+        sensors = new Dictionary<Guid, Sensor>();
 
-        foreach(var weatherSensor in _weatherServerConfiguration.Sensors)
-        {
-            sensors[weatherSensor.Id] = new Sensor(weatherSensor.Id, weatherSensor.PollingFrequency, weatherSensor.LocationType);
-        }
+        foreach (var weatherSensor in _weatherServerConfiguration.Sensors)
+            sensors[weatherSensor.Id] =
+                new Sensor(weatherSensor.Id, weatherSensor.PollingFrequency, weatherSensor.LocationType);
     }
 
     public void OnNewMeasure(SensorMeasure measure)
     {
-        if (!sensors.ContainsKey(measure.SensorId))
-        {
-            throw new ArgumentException(nameof(measure.SensorId));
-        }
+        if (!sensors.ContainsKey(measure.SensorId)) throw new ArgumentException(nameof(measure.SensorId));
 
         lastMeasures.AddOrUpdate(measure.SensorId, measure, (guid, sensorMeasure) => measure);
 
-        foreach (SensorMeasureSubscription subscription in subscriptionStore.GetSubscriptions(measure.SensorId))
+        foreach (var subscription in subscriptionStore.GetSubscriptions(measure.SensorId))
         {
             if (subscription.CancellationToken.IsCancellationRequested)
             {
@@ -71,12 +69,10 @@ public class MeasureService : IMeasureService
         }
     }
 
-    public Guid SubscribeToMeasures(Guid sensorId, Func<SensorMeasure, Task> callback, CancellationToken cancellationToken)
+    public Guid SubscribeToMeasures(Guid sensorId, Func<SensorMeasure, Task> callback,
+        CancellationToken cancellationToken)
     {
-        if (!sensors.ContainsKey(sensorId))
-        {
-            throw new Exception($"Sensor with id {sensorId} is not registered");
-        }
+        if (!sensors.ContainsKey(sensorId)) throw new Exception($"Sensor with id {sensorId} is not registered");
 
         var subscription = new SensorMeasureSubscription(Guid.NewGuid(), sensorId, cancellationToken, callback);
         subscriptionStore.AddSubscription(subscription);

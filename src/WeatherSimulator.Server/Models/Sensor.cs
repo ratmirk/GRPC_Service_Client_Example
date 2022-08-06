@@ -8,7 +8,7 @@ namespace WeatherSimulator.Server.Models;
 /// </summary>
 public class Sensor
 {
-    public Sensor(Guid id, 
+    public Sensor(Guid id,
         int poolingFrequency,
         SensorLocationType locationType)
     {
