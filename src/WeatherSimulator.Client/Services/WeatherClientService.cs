@@ -40,7 +40,7 @@ public class WeatherClientService : BackgroundService
         {
             var message = new ToServerMessage();
             message.SubscribeSensorsIds.AddRange(GetSensorIdsForSubscribe());
-            message.UnsubscribeSensorsIds.Add(GetSensorIdsForUnsubscribe());
+            message.UnsubscribeSensorsIds.AddRange(GetSensorIdsForUnsubscribe());
             UpdateSubscriptions();
 
             try
