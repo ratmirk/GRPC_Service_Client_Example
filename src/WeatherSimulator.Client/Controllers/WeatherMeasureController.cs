@@ -1,5 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
+using WeatherSimulator.Client.Exceptions;
 using WeatherSimulator.Client.Storage;
 using WeatherSimulator.Proto;
 
@@ -7,8 +8,13 @@ namespace WeatherSimulator.Client.Controllers;
 
 [ApiController]
 [Route("api/weather-measure")]
+[AppExceptionFilter]
+[ProducesResponseType(typeof(SensorData), (int)HttpStatusCode.OK)]
+[ProducesResponseType(typeof(string), (int)HttpStatusCode.BadRequest)]
+[ProducesResponseType(typeof(string), (int)HttpStatusCode.NotFound)]
 public class WeatherMeasureController : ControllerBase
 {
+    // TODO: Написать тесты
     private readonly WeatherSimulatorService.WeatherSimulatorServiceClient _weatherClient;
 
     public WeatherMeasureController(WeatherSimulatorService.WeatherSimulatorServiceClient weatherClient)
@@ -20,6 +26,8 @@ public class WeatherMeasureController : ControllerBase
     [Route("sensor-data")]
     public async Task<SensorData> GetSensorData(string id)
     {
+        ValidateId(id);
+
         return await _weatherClient.GetSensorDataAsync(new SensorIdRequest {SensorId = id});
     }
 
@@ -33,15 +41,21 @@ public class WeatherMeasureController : ControllerBase
     [Route("history")]
     public Task<List<SensorData>> GetHistory(string id, int count = 0)
     {
-        ClientStorage.SensorsData.TryGetValue(id, out var history);
-        var historyList = history?.ToList();
+        ValidateId(id);
 
-        if (historyList is null)
-            return Task.FromResult(new List<SensorData>());
+        ClientStorage.SensorsData.TryGetValue(id, out var history);
+        var historyList = (history ?? throw new KeyNotFoundException("История для указанного Sensor Id не найдена")).ToList();
 
         if (count > 0 && historyList.Count > count)
             return Task.FromResult(historyList.Skip(historyList.Count - count).ToList());
 
         return Task.FromResult(historyList);
+    }
+
+    // TODO: Сделать нормальную валидацию, типа FluentValidation или другой вариант.
+    private void ValidateId(string id)
+    {
+        if (!Guid.TryParse(id, out _))
+            throw new ArgumentException("Некорректный SensorId");
     }
 }
