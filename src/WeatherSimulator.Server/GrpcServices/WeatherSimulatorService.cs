@@ -27,15 +27,16 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         _logger = logger;
     }
 
-    public override async Task GetSensorsStream(IAsyncStreamReader<ToServerMessage> requestStream,
+    public override async Task GetSensorsStream(
+        IAsyncStreamReader<ToServerMessage> requestStream,
         IServerStreamWriter<SensorData> responseStream, ServerCallContext context)
     {
         await ProceedMessage(requestStream, responseStream, context.CancellationToken);
     }
 
-    public override Task<SensorData> GetSensorData(SensorInfo sensorInfo, ServerCallContext context)
+    public override Task<SensorData> GetSensorData(SensorIdRequest sensorIdRequest, ServerCallContext context)
     {
-        if (!Guid.TryParse(sensorInfo.SensorId, out var sensorId))
+        if (!Guid.TryParse(sensorIdRequest.SensorId, out var sensorId))
             throw new ArgumentException("Некорректный SensorId");
 
         var sensorMeasure = _measureService.GetLastMeasure(sensorId);
@@ -52,7 +53,8 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         });
     }
 
-    private async Task ProceedMessage(IAsyncStreamReader<ToServerMessage> requestStream,
+    private async Task ProceedMessage(
+        IAsyncStreamReader<ToServerMessage> requestStream,
         IServerStreamWriter<SensorData> responseStream,
         CancellationToken cancellationToken)
     {
@@ -69,7 +71,8 @@ public class WeatherSimulatorService : WeatherSimulatorServiceBase
         }
     }
 
-    private void Subscribe(IServerStreamWriter<SensorData> responseStream,
+    private void Subscribe(
+        IServerStreamWriter<SensorData> responseStream,
         ConcurrentDictionary<Guid, Guid> sensorSubscriptionIds,
         CancellationToken cancellationToken, ToServerMessage current)
     {

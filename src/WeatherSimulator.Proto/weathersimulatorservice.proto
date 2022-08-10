@@ -5,7 +5,7 @@ package WeatherSimulator.Proto;
 
 service WeatherSimulatorService {
   rpc GetSensorsStream (stream ToServerMessage) returns (stream SensorData);
-  rpc GetSensorData (SensorInfo) returns (SensorData);
+  rpc GetSensorData (SensorIdRequest) returns (SensorData);
 }
 
 message ToServerMessage{
@@ -24,6 +24,10 @@ message SensorData {
 message SensorInfo{
   string sensor_id = 1;
   SensorLocationType LocationType = 2;
+}
+
+message SensorIdRequest{
+  string sensor_id = 1;
 }
 
 enum SensorLocationType{

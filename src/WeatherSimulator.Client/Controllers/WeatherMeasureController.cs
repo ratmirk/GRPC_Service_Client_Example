@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Collections.Concurrent;
+using Microsoft.AspNetCore.Mvc;
 using WeatherSimulator.Client.Storage;
 using WeatherSimulator.Proto;
 
@@ -19,15 +20,28 @@ public class WeatherMeasureController : ControllerBase
     [Route("sensor-data")]
     public async Task<SensorData> GetSensorData(string id)
     {
-        return await _weatherClient.GetSensorDataAsync(new SensorInfo {SensorId = id});
+        return await _weatherClient.GetSensorDataAsync(new SensorIdRequest {SensorId = id});
     }
 
+    /// <summary> Получить сохраненные данные для конкретного датчика. </summary>
+    /// <param name="id"> Идентификатор датчика</param>
+    /// <param name="count">
+    /// Последние N штук.
+    /// Если параметр равен 0, то возвращаем всю историю.
+    /// </param>
     [HttpGet]
     [Route("history")]
-    public Task<List<SensorData>> GetHistory(string id)
+    public Task<List<SensorData>> GetHistory(string id, int count = 0)
     {
         ClientStorage.SensorsData.TryGetValue(id, out var history);
+        var historyList = history?.ToList();
 
-        return Task.FromResult(history?.ToList() ?? new List<SensorData>());
+        if (historyList is null)
+            return Task.FromResult(new List<SensorData>());
+
+        if (count > 0 && historyList.Count > count)
+            return Task.FromResult(historyList.Skip(historyList.Count - count).ToList());
+
+        return Task.FromResult(historyList);
     }
 }

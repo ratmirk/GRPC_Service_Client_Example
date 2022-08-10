@@ -14,8 +14,10 @@ public class WeatherClientService : BackgroundService
     private readonly IOptionsMonitor<ClientOptions> _configuration;
     private ConcurrentBag<Guid> _subscriptions;
 
-    public WeatherClientService(WeatherSimulatorService.WeatherSimulatorServiceClient weatherClient,
-        IOptionsMonitor<ClientOptions> configuration, ILogger<WeatherClientService> logger)
+    public WeatherClientService(
+        WeatherSimulatorService.WeatherSimulatorServiceClient weatherClient,
+        IOptionsMonitor<ClientOptions> configuration,
+        ILogger<WeatherClientService> logger)
     {
         _weatherClient = weatherClient;
         _configuration = configuration;
@@ -33,8 +35,7 @@ public class WeatherClientService : BackgroundService
         await Task.WhenAny(requestTask, responseTask);
     }
 
-    private async Task RequestTask(CancellationToken stoppingToken,
-        AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
+    private async Task RequestTask(CancellationToken stoppingToken, AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
@@ -52,13 +53,14 @@ public class WeatherClientService : BackgroundService
                 _logger.LogInformation(e, "Возникла ошибка {Message}", e.Message);
             }
 
+            // TODO: Replace with Polly or another better solution
             await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
         }
     }
 
-    private async Task ReadResponse(CancellationToken stoppingToken,
-        AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
+    private async Task ReadResponse(CancellationToken stoppingToken, AsyncDuplexStreamingCall<ToServerMessage, SensorData> stream)
     {
+        // TODO: Add model SensorData stored with TimeStamp, use Automapper
         await foreach (var sensorData in stream.ResponseStream.ReadAllAsync(stoppingToken))
         {
             if (!ClientStorage.SensorsData.ContainsKey(sensorData.SensorId))
